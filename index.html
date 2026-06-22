@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatboard - AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 900px;
+            height: 700px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .file-upload-section {
+            background: #f8f9ff;
+            border: 2px dashed #4facfe;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-section:hover {
+            background: #f0f2ff;
+            border-color: #00f2fe;
+        }
+
+        .file-upload-section.dragover {
+            background: #e6f3ff;
+            border-color: #0066cc;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #4facfe;
+            margin-bottom: 10px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 172, 254, 0.3);
+        }
+
+        .task-selector {
+            margin: 10px 0;
+        }
+
+        .task-selector select {
+            padding: 8px 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .task-selector select:focus {
+            border-color: #4facfe;
+        }
+
+        .chat-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            min-height: 0;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .message-content {
+            background: #f1f3f5;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-input-area {
+            padding: 20px;
+            border-top: 1px solid #e9ecef;
+            display: flex !important;
+            gap: 10px;
+            background: white;
+            border-radius: 0 0 15px 15px;
+            flex-shrink: 0;
+            min-height: 80px;
+            align-items: center;
+        }
+
+        .file-upload-options {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .file-option-btn {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .file-option-btn:hover {
+            background: #4facfe;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        .upload-status {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4caf50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            display: none;
+            white-space: nowrap;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e6ed;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #4facfe;
+        }
+
+        .send-btn {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.3);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #666;
+            padding: 10px 0;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #4facfe;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            padding: 20px 24px;
+            background: #f1f3f5;
+            border-radius: 20px;
+            border-bottom-left-radius: 6px;
+            margin-bottom: 20px;
+            max-width: 80%;
+            min-height: 60px;
+            animation: fadeIn 0.5s ease-in;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 8px;
+            margin-right: 15px;
+        }
+
+        .typing-dot {
+            width: 12px;
+            height: 12px;
+            background: #4facfe;
+            border-radius: 50%;
+            animation: typingAnimation 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        .typing-dot:nth-child(3) { animation-delay: 0s; }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes typingAnimation {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .typing-indicator span {
+            font-size: 1.1rem;
+            color: #666;
+            font-weight: 500;
+            font-style: italic;
+        }
+
+        .file-info {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .error {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                height: 90vh;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .message-content {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Chatboard</h1>
+            <p>Your intelligent AI assistant for files and conversations</p>
+        </div>
+
+        <div class="main-content">
+            <!-- File Upload Section -->
+            <div class="file-upload-section" id="uploadArea">
+                <div class="upload-icon">📎</div>
+                <h3>Upload File</h3>
+                <p>Drag & drop or click to upload images, PDFs, or audio files</p>
+                
+                <div class="task-selector">
+                    <select id="taskSelect">
+                        <option value="general">General Analysis</option>
+                        <option value="image">Image Description</option>
+                        <option value="pdf">PDF Summary</option>
+                        <option value="audio">Audio Transcription</option>
+                    </select>
+                </div>
+                
+                <input type="file" id="fileInput" class="file-input" accept="image/*,.pdf,audio/*">
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    Choose File
+                </button>
+                
+                <div id="fileInfo" class="file-info"></div>
+                <div id="uploadError" class="error"></div>
+            </div>
+
+            <!-- Chat Section -->
+            <div class="chat-section">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message assistant">
+                        <div class="message-content">
+                            Hello! I'm Chatboard, your AI assistant. Upload a file to analyze it, or just start chatting with me! 👋
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <!-- File Upload Options -->
+                    <div class="file-upload-options">
+                        <!-- PDF Upload -->
+                        <div class="file-option-btn" onclick="uploadPDF()" title="Upload PDF">
+                            📄
+                            <div id="pdfStatus" class="upload-status">PDF</div>
+                        </div>
+                        <input type="file" id="pdfInput" class="file-input" accept=".pdf">
+                        
+                        <!-- Image Upload -->
+                        <div class="file-option-btn" onclick="uploadImage()" title="Upload Image">
+                            🖼️
+                            <div id="imageStatus" class="upload-status">Image</div>
+                        </div>
+                        <input type="file" id="imageInput" class="file-input" accept="image/*">
+                        
+                        <!-- Voice/Audio Upload -->
+                        <div class="file-option-btn" onclick="uploadAudio()" title="Upload Audio">
+                            🎵
+                            <div id="audioStatus" class="upload-status">Audio</div>
+                        </div>
+                        <input type="file" id="audioInput" class="file-input" accept="audio/*">
+                    </div>
+
+                    <input type="text" id="chatInput" class="chat-input" placeholder="Type your message here..." onkeypress="handleKeyPress(event)">
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sessionId = null;
+        let contextText = '';
+
+        // File upload functions
+        function uploadPDF() {
+            document.getElementById('pdfInput').click();
+        }
+
+        function uploadImage() {
+            document.getElementById('imageInput').click();
+        }
+
+        function uploadAudio() {
+            document.getElementById('audioInput').click();
+        }
+
+        // File upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const uploadError = document.getElementById('uploadError');
+
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0], document.getElementById('taskSelect').value);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0], document.getElementById('taskSelect').value);
+            }
+        });
+
+        function handleFileUpload(file, task) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('task', task);
+
+            // Show upload status for specific buttons
+            let statusElement = null;
+            if (task === 'pdf') statusElement = document.getElementById('pdfStatus');
+            else if (task === 'image') statusElement = document.getElementById('imageStatus');
+            else if (task === 'audio') statusElement = document.getElementById('audioStatus');
+
+            if (statusElement) {
+                statusElement.textContent = 'Uploading...';
+                statusElement.style.display = 'block';
+                statusElement.style.background = '#ff9800';
+            }
+
+            // Show in main upload section too
+            fileInfo.style.display = 'block';
+            fileInfo.innerHTML = `<div class="loading"><div class="spinner"></div>Uploading and analyzing ${file.name}...</div>`;
+            uploadError.style.display = 'none';
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // Update status
+                if (statusElement) {
+                    statusElement.textContent = '✓ Done';
+                    statusElement.style.background = '#4caf50';
+                    setTimeout(() => statusElement.style.display = 'none', 3000);
+                }
+                
+                fileInfo.innerHTML = `✅ Successfully analyzed: ${file.name}`;
+                contextText = data.extracted_text;
+                
+                // Add extracted text to chat
+                addMessage('assistant', `📄 File Analysis Result:\n\n${data.extracted_text}`);
+            })
+            .catch(error => {
+                if (statusElement) {
+                    statusElement.textContent = '✗ Error';
+                    statusElement.style.background = '#f44336';
+                    setTimeout(() => statusElement.style.display = 'none', 3000);
+                }
+                
+                fileInfo.style.display = 'none';
+                uploadError.style.display = 'block';
+                uploadError.textContent = `Error: ${error.message}`;
+            });
+        }
+
+        // Chat functionality
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+
+            addMessage('user', message);
+            input.value = '';
+            
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending...';
+
+            // Show typing indicator
+            const typingId = showTypingIndicator();
+
+            const payload = {
+                message: message,
+                session_id: sessionId,
+                context_text: contextText
+            };
+
+            fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                sessionId = data.session_id;
+                // Remove typing indicator and add actual response
+                removeTypingIndicator(typingId);
+                addMessage('assistant', data.reply);
+            })
+            .catch(error => {
+                removeTypingIndicator(typingId);
+                addMessage('assistant', `❌ Error: ${error.message}`);
+            })
+            .finally(() => {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send';
+            });
+        }
+
+        function addMessage(role, content) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = content;
+            
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const chatMessages = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            const typingId = 'typing-' + Date.now();
+            typingDiv.id = typingId;
+            typingDiv.className = 'message assistant';
+            
+            typingDiv.innerHTML = `
+                <div class="typing-indicator">
+                    <div class="typing-dots">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                    <span>🤖 Chatboard جواب لکھ رہا ہے...</span>
+                </div>
+            `;
+            
+            chatMessages.appendChild(typingDiv);
+            
+            // Force scroll to bottom with a small delay
+            setTimeout(() => {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 50);
+            
+            return typingId;
+        }
+
+        function removeTypingIndicator(typingId) {
+            const typingElement = document.getElementById(typingId);
+            if (typingElement) {
+                typingElement.style.opacity = '0';
+                setTimeout(() => {
+                    typingElement.remove();
+                }, 200);
+            }
+        }
+
+        // Initialize file upload listeners for specific buttons
+        document.addEventListener('DOMContentLoaded', () => {
+            // PDF upload
+            document.getElementById('pdfInput').addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileUpload(e.target.files[0], 'pdf');
+                }
+            });
+
+            // Image upload
+            document.getElementById('imageInput').addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileUpload(e.target.files[0], 'image');
+                }
+            });
+
+            // Audio upload
+            document.getElementById('audioInput').addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileUpload(e.target.files[0], 'audio');
+                }
+            });
+
+            document.getElementById('chatInput').focus();
+        });
+    </script>
+</body>
+</html>
